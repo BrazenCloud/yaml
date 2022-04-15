@@ -62,7 +62,8 @@ Function Sync-RwResourceYaml {
 
     Write-Verbose "Context:`n- Name: $($currentUser.name)`n- Email: $($currentUser.emailAddress)`n- Home Group: $($currentUser.homeContainerId)"
 
-    $actionIdCache = @{}
+    $actionCache = @{}
+    $runnerCache = @{}
     
     $resources = ConvertFrom-Yaml $yaml
 
@@ -73,29 +74,43 @@ Function Sync-RwResourceYaml {
         foreach ($connector in $resources.connectors.Keys) {
             Write-Host "Creating connector: '$connector'"
 
-            $actionName = $resources.connectors[$connector]['action']
-
-            if ($actionIdCache.Keys -notcontains $actionName) {
-                $actionIdCache[$actionName] = Import-RwRepository -Name $actionName
+            if ($resources.connectors[$connector].Keys -contains 'action') {
+                if ($resources.connectors[$connector]['action'] -contains 'id') {
+                    $actionId = $resources.connectors[$connector]['action']['id']
+                } else {
+                    if ($actionCache.Keys -notcontains $resources.connectors[$connector]['action']['name']) {
+                        $actionCache[$resources.connectors[$connector]['action']['name']] = Get-RwRepository -Name $resources.connectors[$connector]['action']['name']
+                    }
+                    $actionId = $actionCache[$resources.connectors[$connector]['action']['name']].Id
+                }
             }
 
-            if ($resources.connectors[$connector].Keys -contains 'runnerName') {
-                $runnerId = (Get-RwRunnerByName -Name $resources.connectors[$connector].runnerName).Id
-                Write-Verbose "Associating Runner '$($resources.connectors[$connector].runnerName)' to '$runnerId'"
-            } else {
-                $runnerId = $resources.connectors[$connector].runnerId
+            if ($resources.connectors[$connector].Keys -contains 'runner') {
+                if ($resources.connectors[$connector]['runner'] -contains 'id') {
+                    $runnerId = $resources.connectors[$connector]['runner']['id']
+                } else {
+                    if ($runnerCache.Keys -notcontains $resources.connectors[$connector]['runner']['name']) {
+                        $runnerCache[$resources.connectors[$connector]['runner']['name']] = Get-RwRunnerByName -Name $resources.connectors[$connector]['runner']['name']
+                    }
+                    $runnerId = $runnerCache[$resources.connectors[$connector]['runner']['name']].Id
+                }
             }
 
             $splat = @{
                 Name = $connector
-                ActionId = $actionIdCache[$actionName].Id
+                ActionId = $actionId
                 RunnerId = $runnerId
                 IsHidden = $false
                 GroupId = $currentUser.HomeContainerId
             }
+
+            if ($resources.connectors[$connector].Keys -contains 'parameters') {
+                $splat['settings'] = $resources.connectors[$connector]['parameters']
+            }
+
             $conn = Get-RwConnectionByName $connector
             if ($null -ne $conn) {
-                Set-RwConnection $splat -ConnectionId $conn.Id
+                Set-RwConnection @splat -ConnectionId $conn.Id
             } else {
                 New-RwConnection @splat
             }
@@ -154,7 +169,15 @@ Function Sync-RwResourceYaml {
                 $actions = foreach ($action in $resources.jobs[$job]['actions']) {
                     $x++
                     $actionHt = @{}
-                    $actionHt['RepositoryActionId'] = (Import-RwRepository -Name $action['name']).Id
+                    if ($action.Keys -contains 'id') {
+                        $actionHt['RepositoryActionId'] = $action['id']
+                    } else {
+                        if ($actionCache.Keys -notcontains $action['name']) {
+                            $actionCache[$action['name']] = Get-RwRepository -Name $action['name']
+                            $actionCache[$actionCache[$action['name']].Id] = $actionCache[$action['name']]
+                        }
+                        $actionHt['RepositoryActionId'] = $actionCache[$action['name']].Id
+                    }
                     Write-Verbose "$x - '$($action['name'])'"
                     Write-Verbose "Associating '$($action['name'])' to '$($actionHt['RepositoryActionId'])'"
                     if ($action.Keys -contains 'parameters') {

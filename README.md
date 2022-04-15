@@ -72,7 +72,8 @@ connectors:
     runner:
       name: FileServer01
     parameters:
-      path: E:\Path\To\ReportFolder
+      Path: E:\Path\To\ReportFolder
+      "Use Path": "true"
 
 jobs:
   LocalUsersReport:
@@ -89,21 +90,5 @@ jobs:
     - name: endpoint:getLocalUsers
     - name: download:file
       connector:
-        name: File Server Local Users
-  "AD Stale Users":
-    runners:
-      names:
-      - DC1
-    schedule:
-      type: RunEvery
-      weekdays: '------S'
-      time: 01:00
-      repeatMinutes: "0"
-    actions:
-    - name: ad:staleUsers
-    - name: download:adResults
-      connector:
-        name: File Server AD Results
-
-
+        name: File Server Installed Software
 ```
