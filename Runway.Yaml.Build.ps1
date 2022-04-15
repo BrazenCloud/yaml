@@ -1,23 +1,12 @@
+param (
+    [version]$Version = '0.0.1'
+)
 $srcPath = "$PSScriptRoot\src"
 $buildPath = "$PSScriptRoot\build"
 $docPath = "$PSScriptRoot\docs"
 $testPath = "$PSScriptRoot\tests"
 $moduleName = ($MyInvocation.MyCommand.Name.Split('.') | Select-Object -SkipLast 2) -join '.'
 $modulePath = "$buildPath\$ModuleName"
-if ((Get-ChildItem Env:).Name -contains 'BUILD_BUILDID') {
-    # if we are in a pipeline
-    if ($env:BUILD_BUILDNUMBER -like '*-*') {
-        $preRelease = $env:BUILD_BUILDNUMBER.Split('-') | Select-Object -Last 1
-    }
-    [version]$version = if ($env:BUILD_BUILDNUMBER.Split('-').Count -gt 1) {
-        ($env:BUILD_BUILDNUMBER.Split('-') | Select-Object -SkipLast 1) -join '-'
-    } else {
-        $env:BUILD_BUILDNUMBER
-    }
-} else {
-    # if we are local
-    [version]$version = '0.0.1'
-}
 
 Write-Host "Version: $($version)"
 
