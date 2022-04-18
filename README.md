@@ -90,5 +90,5 @@ jobs:
     - name: endpoint:getLocalUsers
     - name: download:file
       connector:
-        name: File Server Installed Software
+        name: File Server Local USers
 ```
