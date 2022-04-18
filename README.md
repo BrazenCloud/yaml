@@ -8,7 +8,7 @@ This module is designed to extend the [Runway PowerShell SDK](https://github.com
 Install-Module Runway.Yaml -Repository PSGallery
 ```
 
-This module requires the Runway module v0.2.0+.
+This module requires the [Runway module v0.2.0+](https://github.com/runway-software/runway-powershell).
 
 ## YAML definition
 
