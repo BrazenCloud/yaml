@@ -1,5 +1,6 @@
 param (
-    [version]$Version = '0.0.1'
+    [version]$Version = '0.0.1',
+    [string]$NugetApiKey
 )
 $srcPath = "$PSScriptRoot\src"
 $buildPath = "$PSScriptRoot\build"
@@ -88,7 +89,9 @@ Task Test ModuleBuild, {
 }
 
 task Publish Test, DocBuild, {
-    Invoke-PSDeploy -Force -Verbose
+    if ($PSBoundParameters.Keys.Contains('NugetApiKeys')) {
+        Publish-Module -Name $moduleName -NuGetApiKey $NugetApiKey -RequiredVersion $Version -Repository PsGallery
+    }
 }
 
 task All ModuleBuild, Publish
