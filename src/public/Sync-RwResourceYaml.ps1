@@ -29,9 +29,10 @@ Function Sync-RwResourceYaml {
     # If there are any connectors
     if ($resources.connectors) {
         Write-Host "Found $($resources.connectors.count) connectors"
+        Write-Host "Connectors:"
 
         foreach ($connector in $resources.connectors.Keys) {
-            Write-Host "Creating connector: '$connector'"
+            Write-Host "- $connector"
 
             if ($resources.connectors[$connector].Keys -contains 'action') {
                 if ($resources.connectors[$connector]['action'] -contains 'id') {
@@ -69,8 +70,10 @@ Function Sync-RwResourceYaml {
 
             $conn = Get-RwConnectionByName $connector
             if ($null -ne $conn) {
+                Write-Host '  - Updating existing connector'
                 Set-RwConnection @splat -ConnectionId $conn.Id
             } else {
+                Write-Host '  - Creating new connector'
                 New-RwConnection @splat
             }
         }
@@ -81,25 +84,26 @@ Function Sync-RwResourceYaml {
     # If there are any jobs
     if ($resources.jobs) {
         Write-Host "Found $($resources.jobs.count) jobs"
+        Write-Host 'Jobs:'
 
         foreach ($job in $resources.jobs.Keys) {
-            Write-Host "Working on Job: '$job'"
+            Write-Host "- $job"
             
-            # Create job if not already exist
+            # Create job if it doesn't already exist
             $existingJob = Get-RwJobByName $job
 
             if ($null -ne $existingJob) {
-                Write-Verbose 'Job already exists, will update it.'
+                Write-Verbose '  - Updating existing'
                 $existingJob = Get-RwJob -JobId $existingJob.Id
             } else {
-                Write-Verbose 'Job does not exist, will create it.'
+                Write-Verbose '  - Creating a new one'
                 $newJob = New-RwJob -Name $job -IsEnabled -IsHidden:$false
                 $existingJob = Get-RwJob -JobId $newJob.JobId
             }
 
             # Assign Schedule
             if ($resources.jobs[$job].Keys -contains 'schedule') {
-                Write-Host "Adding Schedule."
+                Write-Host "  - Adding Schedule"
                 # Create the schedule object
                 $scheduleSplat = @{
                     repeatMinutes = if ($resources.jobs[$job]['schedule'].Keys -contains 'repeatMinutes') {
@@ -123,7 +127,7 @@ Function Sync-RwResourceYaml {
 
             # Assign Actions
             if ($resources.jobs[$job].Keys -contains 'actions') {
-                Write-Host 'Adding Actions to the Job.'
+                Write-Host '  - Adding Actions'
                 $x = 0
                 $actions = foreach ($action in $resources.jobs[$job]['actions']) {
                     $x++
@@ -137,15 +141,15 @@ Function Sync-RwResourceYaml {
                         }
                         $actionHt['RepositoryActionId'] = $actionCache[$action['name']].Id
                     }
-                    Write-Verbose "$x - '$($action['name'])'"
+                    Write-Host "    - $x`: '$($action['name'])'"
                     Write-Verbose "Associating '$($action['name'])' to '$($actionHt['RepositoryActionId'])'"
                     if ($action.Keys -contains 'parameters') {
-                        Write-Verbose "Adding parameters."
+                        Write-Host "      - Adding parameters"
                         $actionHt['Settings'] = $action['parameters']
                     }
 
                     if ($action.Keys -contains 'connector') {
-                        Write-Verbose "Adding connector."
+                        Write-Host "      - Adding connector"
                         if ($action['connector'].Keys -contains 'id') {
                             $actionHt['ConnectionId'] = $action['connector']['id']
                         } elseif ($action['connector'].Keys -contains 'name') {
@@ -160,16 +164,16 @@ Function Sync-RwResourceYaml {
 
             # Assign Runners
             if ($resources.jobs[$job].Keys -contains 'runners') {
-                Write-Host 'Adding Runners to the Job.'
+                Write-Host '  - Adding Runners'
                 $newMembers = if ($resources.jobs[$job]['runners'].Keys -contains 'names') {
-                    Write-Verbose "Adding runners by name."
+                    Write-Host "    - Adding runners by name"
                     (Get-RwRunnerByName -AssetName $resources.jobs[$job]['runners']['names']).AssetId
                 } elseif ($resources.jobs[$job]['runners'].Keys -contains 'tags') {
-                    Write-Verbose "Adding Runners by tags: '$($resources.jobs[$job]['runners']['tags'] -join "','")'."
+                    Write-Host "    - Adding Runners by tags: '$($resources.jobs[$job]['runners']['tags'] -join "','")'."
                     (Get-RwEndpointByTag -Tags $resources.jobs[$job]['runners']['tags']).Id
                 }
 
-                Write-Verbose "Found $($newMembers.Count) total Runners that should be assigned."
+                Write-Host "    - Found $($newMembers.Count) total Runners that should be assigned"
 
                 Sync-RwSetMembership -Members $newMembers -SetId $existingJob.EndpointSetId
             }
