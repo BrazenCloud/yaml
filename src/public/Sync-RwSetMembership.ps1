@@ -22,7 +22,7 @@ Function Sync-RwSetMembership {
     foreach ($newMember in $Members) {
         if ($existingMembers.Items.Id -notcontains $newMember) {
             #Write-Verbose "Will add $($newMember)"
-            $toAdd.Add($newMember)       
+            $toAdd.Add($newMember)
         }
     }
 
