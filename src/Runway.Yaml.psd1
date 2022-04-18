@@ -56,6 +56,11 @@ RequiredModules = @(
         ModuleName = 'Runway'
         ModuleVersion = '0.2.0'
         GUID = 'bc28dca3-18ff-4e56-8fa3-b21c3ad6a1e1'
+    },
+    @{
+        ModuleName = 'powerShell-yaml'
+        ModuleVersion = '0.4.2'
+        GUID = '6a75a662-7f53-425a-9777-ee61284407da'
     }
 )
 

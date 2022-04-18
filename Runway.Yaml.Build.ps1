@@ -89,8 +89,8 @@ Task Test ModuleBuild, {
 }
 
 task Publish Test, DocBuild, {
-    if ($PSBoundParameters.Keys.Contains('NugetApiKey')) {
-        Publish-Module -Name $moduleName -NuGetApiKey $NugetApiKey -RequiredVersion $Version -Repository PsGallery
+    if ($null -ne $NugetApiKey) {
+        Publish-Module -Path .\build\$moduleName -NuGetApiKey $NugetApiKey -Repository PsGallery
     }
 }
 
