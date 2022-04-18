@@ -26,7 +26,7 @@ task DocBuild ModuleBuild,{
     if (-not (Test-Path $docPath)) {
         New-Item $docPath -ItemType Directory
     }
-    New-ExternalHelp $docPath -OutputPath "$modulePath\EN-US"
+    #New-ExternalHelp $docPath -OutputPath "$modulePath\EN-US"
 }
 
 # Build the module
@@ -89,7 +89,7 @@ Task Test ModuleBuild, {
 }
 
 task Publish Test, DocBuild, {
-    if ($PSBoundParameters.Keys.Contains('NugetApiKeys')) {
+    if ($PSBoundParameters.Keys.Contains('NugetApiKey')) {
         Publish-Module -Name $moduleName -NuGetApiKey $NugetApiKey -RequiredVersion $Version -Repository PsGallery
     }
 }
