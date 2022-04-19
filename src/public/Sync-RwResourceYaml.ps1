@@ -10,7 +10,8 @@ Function Sync-RwResourceYaml {
         [Parameter(
             ParameterSetName = 'FromFile'
         )]
-        [string]$PathToYaml
+        [string]$PathToYaml,
+        [switch]$Test
     )
 
     if ($PSCmdlet.ParameterSetName -eq 'FromFile') {
@@ -34,6 +35,7 @@ Function Sync-RwResourceYaml {
         foreach ($connector in $resources.connectors.Keys) {
             Write-Information "- $connector"
 
+            # Leveraging a cache for the Action names
             if ($resources.connectors[$connector].Keys -contains 'action') {
                 if ($resources.connectors[$connector]['action'] -contains 'id') {
                     $actionId = $resources.connectors[$connector]['action']['id']
@@ -45,6 +47,7 @@ Function Sync-RwResourceYaml {
                 }
             }
 
+            # Leveraging a cache for the Runner names
             if ($resources.connectors[$connector].Keys -contains 'runner') {
                 if ($resources.connectors[$connector]['runner'] -contains 'id') {
                     $runnerId = $resources.connectors[$connector]['runner']['id']
@@ -70,11 +73,19 @@ Function Sync-RwResourceYaml {
 
             $conn = Get-RwConnectionByName $connector
             if ($null -ne $conn) {
-                Write-Information '  - Updating existing connector'
-                Set-RwConnection @splat -ConnectionId $conn.Id
+                Write-Information '  - Updating existing Connector'
+                if ($Test.IsPresent) {
+                    Write-Information "  - Would update existing Connector"
+                } else {
+                    Set-RwConnection @splat -ConnectionId $conn.Id
+                }
             } else {
                 Write-Information '  - Creating new connector'
-                New-RwConnection @splat
+                if ($Test.IsPresent) {
+                    Write-Information "  - Would create new Connector"
+                } else {
+                    New-RwConnection @splat
+                }
             }
         }
     } else {
@@ -97,8 +108,12 @@ Function Sync-RwResourceYaml {
                 $existingJob = Get-RwJob -JobId $existingJob.Id
             } else {
                 Write-Verbose '  - Creating a new one'
-                $newJob = New-RwJob -Name $job -IsEnabled -IsHidden:$false
-                $existingJob = Get-RwJob -JobId $newJob.JobId
+                if ($Test.IsPresent) {
+                    Write-Information "  - Would create job"
+                } else {
+                    $newJob = New-RwJob -Name $job -IsEnabled -IsHidden:$false
+                    $existingJob = Get-RwJob -JobId $newJob.JobId
+                }
             }
 
             # Assign Schedule
@@ -122,7 +137,11 @@ Function Sync-RwResourceYaml {
                 $schedule = New-RwJobScheduleObject @scheduleSplat
 
                 # Set the schedule
-                Set-RwJobSchedule -JobId $existingJob.Id -Schedule $schedule
+                if ($Test.IsPresent) {
+                    Write-Information "  - Would set schedule to $($scheduleSplat | ConvertTo-Json -Compress)"
+                } else {
+                    Set-RwJobSchedule -JobId $existingJob.Id -Schedule $schedule
+                }
             }
 
             # Assign Actions
@@ -159,7 +178,11 @@ Function Sync-RwResourceYaml {
 
                     $actionHt
                 }
-                Set-RwJobAction -JobId $existingJob.Id -Request $actions
+                if ($Test.IsPresent) {
+                    Write-Information "    - Would Update Actions"
+                } else {
+                    Set-RwJobAction -JobId $existingJob.Id -Request $actions
+                }
             }
 
             # Assign Runners
@@ -175,7 +198,11 @@ Function Sync-RwResourceYaml {
 
                 Write-Information "    - Found $($newMembers.Count) total Runners that should be assigned"
 
-                Sync-RwSetMembership -Members $newMembers -SetId $existingJob.EndpointSetId
+                if ($Test.IsPresent) {
+                    Write-Information "    - Would update membership"   
+                } else {
+                    Sync-RwSetMembership -Members $newMembers -SetId $existingJob.EndpointSetId
+                }
             }
         }
     } else {
