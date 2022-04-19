@@ -1,4 +1,5 @@
 # runway-powershell-yaml
+[![Runway.YAML](https://img.shields.io/powershellgallery/v/Runway.YAML.svg?style=flat-square&label=Runway.YAML "Runway.YAML")](https://www.powershellgallery.com/packages/Runway.YAML/)
 
 This module is designed to extend the [Runway PowerShell SDK](https://github.com/runway-software/runway-powershell) to enable importing job definitions in YAML format.
 
