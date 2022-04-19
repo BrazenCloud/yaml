@@ -199,7 +199,7 @@ Function Sync-RwResourceYaml {
                 Write-Information "    - Found $($newMembers.Count) total Runners that should be assigned"
 
                 if ($Test.IsPresent) {
-                    Write-Information "    - Would update membership"   
+                    Write-Information "    - Would update membership"
                 } else {
                     Sync-RwSetMembership -Members $newMembers -SetId $existingJob.EndpointSetId
                 }
