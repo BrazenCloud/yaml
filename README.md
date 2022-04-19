@@ -10,6 +10,10 @@ Install-Module Runway.Yaml -Repository PSGallery
 
 This module requires the [Runway module v0.2.0+](https://github.com/runway-software/runway-powershell).
 
+## Example
+
+To see an example of how to use this module, check out our [YAML demo repo](https://github.com/runway-software/yaml-demo)
+
 ## YAML definition
 
 In current form, Runway.YAML supports 2 base objects: `jobs` and `connectors`.
