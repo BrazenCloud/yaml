@@ -22,9 +22,6 @@ Function Sync-RwResourceYaml {
 
     Write-Verbose "Context:`n- Name: $($currentUser.name)`n- Email: $($currentUser.emailAddress)`n- Home Group: $($currentUser.homeContainerId)"
 
-    $actionCache = @{}
-    $runnerCache = @{}
-
     $resources = ConvertFrom-Yaml $yaml
 
     # If there are any connectors
@@ -40,10 +37,7 @@ Function Sync-RwResourceYaml {
                 if ($resources.connectors[$connector]['action'] -contains 'id') {
                     $actionId = $resources.connectors[$connector]['action']['id']
                 } else {
-                    if ($actionCache.Keys -notcontains $resources.connectors[$connector]['action']['name']) {
-                        $actionCache[$resources.connectors[$connector]['action']['name']] = Get-RwRepository -Name $resources.connectors[$connector]['action']['name']
-                    }
-                    $actionId = $actionCache[$resources.connectors[$connector]['action']['name']].Id
+                    $actionId = (Get-RwResourceFromCache -ResourceType Action -Name $resources.connectors[$connector]['action']['name']).Id
                 }
             }
 
@@ -52,10 +46,7 @@ Function Sync-RwResourceYaml {
                 if ($resources.connectors[$connector]['runner'] -contains 'id') {
                     $runnerId = $resources.connectors[$connector]['runner']['id']
                 } else {
-                    if ($runnerCache.Keys -notcontains $resources.connectors[$connector]['runner']['name']) {
-                        $runnerCache[$resources.connectors[$connector]['runner']['name']] = Get-RwRunnerByName -Name $resources.connectors[$connector]['runner']['name']
-                    }
-                    $runnerId = $runnerCache[$resources.connectors[$connector]['runner']['name']].Id
+                    $runnerId = Get-RwResourceFromCache -ResourceType Runner -Name $resources.connectors[$connector]['runner']['name']
                 }
             }
 
@@ -154,11 +145,7 @@ Function Sync-RwResourceYaml {
                     if ($action.Keys -contains 'id') {
                         $actionHt['RepositoryActionId'] = $action['id']
                     } else {
-                        if ($actionCache.Keys -notcontains $action['name']) {
-                            $actionCache[$action['name']] = Get-RwRepository -Name $action['name']
-                            $actionCache[$actionCache[$action['name']].Id] = $actionCache[$action['name']]
-                        }
-                        $actionHt['RepositoryActionId'] = $actionCache[$action['name']].Id
+                        $actionHt['RepositoryActionId'] = Get-RwResourceFromCache -ResourceType Action -Name $action['name']
                     }
                     Write-Information "    - $x`: '$($action['name'])'"
                     Write-Verbose "Associating '$($action['name'])' to '$($actionHt['RepositoryActionId'])'"
