@@ -110,22 +110,10 @@ Function Sync-RwResourceYaml {
             # Assign Schedule
             if ($resources.jobs[$job].Keys -contains 'schedule') {
                 Write-Information "  - Adding Schedule"
+                
                 # Create the schedule object
-                $scheduleSplat = @{
-                    repeatMinutes = if ($resources.jobs[$job]['schedule'].Keys -contains 'repeatMinutes') {
-                            $resources.jobs[$job]['schedule']['repeatMinutes']
-                        } else { $null }
-                    Time = if ($resources.jobs[$job]['schedule'].Keys -contains 'time') {
-                            $resources.jobs[$job]['schedule']['time']
-                        } else { $null }
-                    scheduletype = if ($resources.jobs[$job]['schedule'].Keys -contains 'type') {
-                            $resources.jobs[$job]['schedule']['type']
-                        } else { 'RunNow' }
-                    weekdays = if ($resources.jobs[$job]['schedule'].Keys -contains 'weekdays') {
-                            $resources.jobs[$job]['schedule']['weekdays']
-                        } else { $null }
-                }
-                $schedule = New-RwJobScheduleObject @scheduleSplat
+                $sched = $resources.jobs[$job]['schedule']
+                $schedule = New-RwJobSchedule @sched
 
                 # Set the schedule
                 if ($Test.IsPresent) {
