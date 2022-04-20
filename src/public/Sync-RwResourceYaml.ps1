@@ -46,7 +46,7 @@ Function Sync-RwResourceYaml {
                 if ($resources.connectors[$connector]['runner'] -contains 'id') {
                     $runnerId = $resources.connectors[$connector]['runner']['id']
                 } else {
-                    $runnerId = Get-RwResourceFromCache -ResourceType Runner -Name $resources.connectors[$connector]['runner']['name']
+                    $runnerId = (Get-RwResourceFromCache -ResourceType Runner -Name $resources.connectors[$connector]['runner']['name']).Id
                 }
             }
 
@@ -68,7 +68,7 @@ Function Sync-RwResourceYaml {
                 if ($Test.IsPresent) {
                     Write-Information "  - Would update existing Connector"
                 } else {
-                    Set-RwConnection @splat -ConnectionId $conn.Id
+                    Set-RwConnection @splat -ConnectionId $conn.Id -ErrorAction Stop
                 }
             } else {
                 Write-Information '  - Creating new connector'
@@ -145,7 +145,7 @@ Function Sync-RwResourceYaml {
                     if ($action.Keys -contains 'id') {
                         $actionHt['RepositoryActionId'] = $action['id']
                     } else {
-                        $actionHt['RepositoryActionId'] = Get-RwResourceFromCache -ResourceType Action -Name $action['name']
+                        $actionHt['RepositoryActionId'] = (Get-RwResourceFromCache -ResourceType Action -Name $action['name']).Id
                     }
                     Write-Information "    - $x`: '$($action['name'])'"
                     Write-Verbose "Associating '$($action['name'])' to '$($actionHt['RepositoryActionId'])'"
