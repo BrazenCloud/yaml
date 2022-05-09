@@ -78,6 +78,19 @@ Function Sync-RwResourceYaml {
                     New-RwConnection @splat
                 }
             }
+
+            # Assign Tags
+            if ($resources.connectors[$connector].Keys -contains 'tags') {
+                # Build a set
+                $set = New-RwSet
+                # Add the job to the set
+                if ($null -eq $conn) {
+                    $conn = Get-RwConnectionByName -ConnectionName $connector
+                }
+                Add-RwSetToSet -TargetSetId $set -ObjectIds $conn.Id
+                # Add the tags to the set
+                Add-RwTag -SetId $set -Tags $resources.connectors[$connector]['tags']
+            }
         }
     } else {
         Write-Information "No connectors found."
