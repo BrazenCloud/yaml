@@ -123,7 +123,7 @@ Function Sync-RwResourceYaml {
             # Assign Schedule
             if ($resources.jobs[$job].Keys -contains 'schedule') {
                 Write-Information "  - Adding Schedule"
-                
+
                 # Create the schedule object
                 $sched = $resources.jobs[$job]['schedule']
                 $schedule = New-RwJobSchedule @sched
