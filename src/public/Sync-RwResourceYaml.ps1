@@ -51,11 +51,11 @@ Function Sync-RwResourceYaml {
             }
 
             $splat = @{
-                Name = $connector
+                Name     = $connector
                 ActionId = $actionId
                 RunnerId = $runnerId
                 IsHidden = $false
-                GroupId = $currentUser.HomeContainerId
+                GroupId  = $currentUser.HomeContainerId
             }
 
             if ($resources.connectors[$connector].Keys -contains 'parameters') {
@@ -178,6 +178,16 @@ Function Sync-RwResourceYaml {
                 } else {
                     Sync-RwSetMembership -Members $newMembers -SetId $existingJob.EndpointSetId
                 }
+            }
+
+            # Assign Tags
+            if ($resources.jobs[$job].Keys -contains 'tags') {
+                # Build a set
+                $set = New-RwSet
+                # Add the job to the set
+                Add-RwSetToSet -TargetSetId $set -ObjectIds $existingJob.Id
+                # Add the tags to the set
+                Add-RwTag -SetId $set -Tags $resources.jobs[$job]['tags']
             }
         }
     } else {
