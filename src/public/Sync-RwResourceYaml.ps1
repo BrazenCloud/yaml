@@ -81,15 +81,20 @@ Function Sync-RwResourceYaml {
 
             # Assign Tags
             if ($resources.connectors[$connector].Keys -contains 'tags') {
-                # Build a set
-                $set = New-RwSet
-                # Add the job to the set
-                if ($null -eq $conn) {
-                    $conn = Get-RwConnectionByName -ConnectionName $connector
+                if ($Test.IsPresent) {
+                    Write-Information "  - Would add tags: $($resources.connectors[$connector]['tags'] -join ',')"
+                } else {
+                    # Build a set
+                    $set = New-RwSet
+                    # Add the job to the set
+                    if ($null -eq $conn) {
+                        $conn = Get-RwConnectionByName -ConnectionName $connector
+                    }
+                    Add-RwSetToSet -TargetSetId $set -ObjectIds $conn.Id
+                    # Add the tags to the set
+                    Write-Information "  - Adding tags: $($resources.connectors[$connector]['tags'] -join ',')"
+                    Add-RwTag -SetId $set -Tags $resources.connectors[$connector]['tags']
                 }
-                Add-RwSetToSet -TargetSetId $set -ObjectIds $conn.Id
-                # Add the tags to the set
-                Add-RwTag -SetId $set -Tags $resources.connectors[$connector]['tags']
             }
         }
     } else {
@@ -195,12 +200,17 @@ Function Sync-RwResourceYaml {
 
             # Assign Tags
             if ($resources.jobs[$job].Keys -contains 'tags') {
-                # Build a set
-                $set = New-RwSet
-                # Add the job to the set
-                Add-RwSetToSet -TargetSetId $set -ObjectIds $existingJob.Id
-                # Add the tags to the set
-                Add-RwTag -SetId $set -Tags $resources.jobs[$job]['tags']
+                if ($Test.IsPresent) {
+                    Write-Information "  - Would add tags: $($resources.jobs[$job]['tags'] -join ',')"
+                } else {
+                    # Build a set
+                    $set = New-RwSet
+                    # Add the job to the set
+                    Add-RwSetToSet -TargetSetId $set -ObjectIds $existingJob.Id
+                    # Add the tags to the set
+                    Write-Information "  - Adding tags: $($resources.jobs[$job]['tags'] -join ',')"
+                    Add-RwTag -SetId $set -Tags $resources.jobs[$job]['tags']
+                }
             }
         }
     } else {
