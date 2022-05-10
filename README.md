@@ -13,12 +13,11 @@ This module requires the [Runway module v0.2.0+](https://github.com/runway-softw
 
 ## Usage
 
+For all usage, you will need to Authenticate to Runway (see the [Runway PowerShell repository](https://github.com/runway-software/runway-powershell)).
+
 ### Export YAML
 
-To export a job definition from Runway, you'll need to do the following first:
-
-- Authenticate to Runway (see the [Runway PowerShell repository](https://github.com/runway-software/runway-powershell))
-- Find the job name or ID and run:
+To export a job definition from Runway, you'll need to find the job name or ID and run:
 
 ```powershell
 Get-RwJobYaml -JobName 'Demo Job'
@@ -32,12 +31,7 @@ Get-RwJobYaml -JobName 'Demo Job' | Out-File .\DemoJob.yaml
 
 ### Import YAML
 
-To import a job definition into Runway, you'll need to do the following first:
-
-- Authenticate to Runway (see the [Runway PowerShell repository](https://github.com/runway-software/runway-powershell))
-- Locate the file on your disk or have the yaml loaded already
-
-Run:
+To import a job definition into Runway, you'll need to locate the file on your disk or have the yaml loaded already
 
 ```powershell
 Sync-RwResourceYaml -PathToYaml .\DemoJob.yaml
