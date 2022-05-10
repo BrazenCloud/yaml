@@ -51,11 +51,11 @@ Function Sync-RwResourceYaml {
             }
 
             $splat = @{
-                Name = $connector
+                Name     = $connector
                 ActionId = $actionId
                 RunnerId = $runnerId
                 IsHidden = $false
-                GroupId = $currentUser.HomeContainerId
+                GroupId  = $currentUser.HomeContainerId
             }
 
             if ($resources.connectors[$connector].Keys -contains 'parameters') {
@@ -76,6 +76,24 @@ Function Sync-RwResourceYaml {
                     Write-Information "  - Would create new Connector"
                 } else {
                     New-RwConnection @splat
+                }
+            }
+
+            # Assign Tags
+            if ($resources.connectors[$connector].Keys -contains 'tags') {
+                if ($Test.IsPresent) {
+                    Write-Information "  - Would add tags: $($resources.connectors[$connector]['tags'] -join ',')"
+                } else {
+                    # Build a set
+                    $set = New-RwSet
+                    # Add the job to the set
+                    if ($null -eq $conn) {
+                        $conn = Get-RwConnectionByName -ConnectionName $connector
+                    }
+                    Add-RwSetToSet -TargetSetId $set -ObjectIds $conn.Id
+                    # Add the tags to the set
+                    Write-Information "  - Adding tags: $($resources.connectors[$connector]['tags'] -join ',')"
+                    Add-RwTag -SetId $set -Tags $resources.connectors[$connector]['tags']
                 }
             }
         }
@@ -110,7 +128,7 @@ Function Sync-RwResourceYaml {
             # Assign Schedule
             if ($resources.jobs[$job].Keys -contains 'schedule') {
                 Write-Information "  - Adding Schedule"
-                
+
                 # Create the schedule object
                 $sched = $resources.jobs[$job]['schedule']
                 $schedule = New-RwJobSchedule @sched
@@ -177,6 +195,21 @@ Function Sync-RwResourceYaml {
                     Write-Information "    - Would update membership"
                 } else {
                     Sync-RwSetMembership -Members $newMembers -SetId $existingJob.EndpointSetId
+                }
+            }
+
+            # Assign Tags
+            if ($resources.jobs[$job].Keys -contains 'tags') {
+                if ($Test.IsPresent) {
+                    Write-Information "  - Would add tags: $($resources.jobs[$job]['tags'] -join ',')"
+                } else {
+                    # Build a set
+                    $set = New-RwSet
+                    # Add the job to the set
+                    Add-RwSetToSet -TargetSetId $set -ObjectIds $existingJob.Id
+                    # Add the tags to the set
+                    Write-Information "  - Adding tags: $($resources.jobs[$job]['tags'] -join ',')"
+                    Add-RwTag -SetId $set -Tags $resources.jobs[$job]['tags']
                 }
             }
         }
