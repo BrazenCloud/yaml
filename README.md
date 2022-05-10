@@ -3,6 +3,10 @@
 
 This module is designed to extend the [Runway PowerShell SDK](https://github.com/runway-software/runway-powershell) to enable importing and exporting job definitions in YAML format.
 
+## Example
+
+Be sure to check out our [Yaml Demo](https://github.com/runway-software/yaml-demo) example repository with several yaml examples and a [Github Actions CI/CD workflow](https://github.com/Runway-Software/yaml-demo/blob/main/.github/workflows/cicd.yaml) that leverages this module.
+
 ## Installation
 
 ```powershell
