@@ -92,13 +92,19 @@ Function Get-RwJobYaml {
                 }
             }
         }
-        if ($IncludeAssignedRunnersById.IsPresent) {
-            $ht[$job.Name]['runners'] = @{
-                Ids = (Get-RwSetMember -SetId (Get-RwJob -JobId $job.Id).EndpointSetId).Id
+        switch ($PSCmdlet.ParameterSetName) {
+            { ($_ -like 'ByName*') } {
+                $job = Get-RwJob -JobId $job.Id
             }
-        } elseIf ($IncludeAssignedRunnersByName.IsPresent) {
-            $ht[$job.Name]['runners'] = @{
-                Names = (Get-RwSetMember -SetId (Get-RwJob -JobId $job.Id).EndpointSetId).Name
+            { ($_ -like '*-Id') } {
+                $ht[$job.Name]['runners'] = @{
+                    Ids = (Get-RwSetMember -SetId $job.EndpointSetId).Id
+                }
+            }
+            { ($_ -like '*-Name') } {
+                $ht[$job.Name]['runners'] = @{
+                    Names = (Get-RwSetMember -SetId $job.EndpointSetId).Name
+                }
             }
         }
         $ht
