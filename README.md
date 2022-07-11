@@ -148,3 +148,11 @@ jobs:
       connector:
         name: File Server Local USers
 ```
+
+## ChangeLog
+
+### 0.1.1
+
+  - Can now retrieve assigned Runners via `-IncludeAssignedRunnersById` or `-IncludeAssignedRunnersByName` on `Get-RwJobYaml`.
+
+### 0.1.0: Initial Release
