@@ -7,25 +7,62 @@ Function Get-RwJobYaml {
             Mandatory,
             ParameterSetName = 'ById'
         )]
-        [string]$JobId,
+        [Parameter(
+            Mandatory,
+            ParameterSetName = 'ById-Id'
+        )]
+        [Parameter(
+            Mandatory,
+            ParameterSetName = 'ById-Name'
+        )]
+        [string[]]$JobId,
         [Parameter(
             Mandatory,
             ParameterSetName = 'ByName'
         )]
-        [string]$JobName
+        [Parameter(
+            Mandatory,
+            ParameterSetName = 'ByName-Id'
+        )]
+        [Parameter(
+            Mandatory,
+            ParameterSetName = 'ByName-Name'
+        )]
+        [string[]]$JobName,
+        [Parameter(
+            Mandatory,
+            ParameterSetName = 'ByName-Id'
+        )]
+        [Parameter(
+            Mandatory,
+            ParameterSetName = 'ById-Id'
+        )]
+        [switch]$IncludeAssignedRunnersById,
+        [Parameter(
+            Mandatory,
+            ParameterSetName = 'ByName-Name'
+        )]
+        [Parameter(
+            Mandatory,
+            ParameterSetName = 'ById-Name'
+        )]
+        [switch]$IncludeAssignedRunnersByName
     )
-    if ($PSCmdlet.ParameterSetName -eq 'ByName') {
-        $job = Get-RwJobByName -JobName $JobName
-    } elseif ($PSCmdlet.ParameterSetName -eq 'ById') {
-        $job = Get-RwJob -JobId $JobId
+    $jobs = if ($PSCmdlet.ParameterSetName -like 'ByName*') {
+        foreach ($name in $jobName) {
+            Get-RwJobByName -JobName $name
+        }
+    } elseif ($PSCmdlet.ParameterSetName -like 'ById*') {
+        foreach ($id in $JobId) {
+            Get-RwJob -JobId $id
+        }
     }
-
-    $actionsSorted = Sort-RwJobActions -Actions $job.Actions
 
     # Build basic job
     $jobHt = @{}
-    $jobHt['jobs'] = @{
-        $job.Name = [ordered]@{
+    $jobHt['jobs'] = @{}
+    foreach ($job in $jobs ) {
+        $jobHt['jobs'][$job.Name] = [ordered]@{
             tags     = @($job.Tags)
             schedule = [ordered]@{
                 type          = $job.Schedule.ScheduleType
@@ -36,7 +73,7 @@ Function Get-RwJobYaml {
             runners  = @{
                 tags = @( 'setme' )
             }
-            actions  = foreach ($action in $actionsSorted) {
+            actions  = foreach ($action in (Sort-RwJobActions -Actions $job.Actions)) {
                 [ordered]@{
                     name       = $action.ActionName
                     parameters = & {
@@ -49,6 +86,21 @@ Function Get-RwJobYaml {
                     connector  = @{
                         id = $action.ConnectionId
                     }
+                }
+            }
+        }
+        switch ($PSCmdlet.ParameterSetName) {
+            { ($_ -like 'ByName*') } {
+                $job = Get-RwJob -JobId $job.Id
+            }
+            { ($_ -like '*-Id') } {
+                $jobHt['jobs'][$job.Name]['runners'] = @{
+                    Ids = (Get-RwSetMember -SetId $job.EndpointSetId).Id
+                }
+            }
+            { ($_ -like '*-Name') } {
+                $jobHt['jobs'][$job.Name]['runners'] = @{
+                    Names = (Get-RwSetMember -SetId $job.EndpointSetId).Name
                 }
             }
         }
