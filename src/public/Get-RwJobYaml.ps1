@@ -15,7 +15,7 @@ Function Get-RwJobYaml {
             Mandatory,
             ParameterSetName = 'ById-Name'
         )]
-        [string]$JobId,
+        [string[]]$JobId,
         [Parameter(
             Mandatory,
             ParameterSetName = 'ByName'
@@ -28,7 +28,7 @@ Function Get-RwJobYaml {
             Mandatory,
             ParameterSetName = 'ByName-Name'
         )]
-        [string]$JobName,
+        [string[]]$JobName,
         [Parameter(
             Mandatory,
             ParameterSetName = 'ByName-Id'
@@ -58,36 +58,33 @@ Function Get-RwJobYaml {
         }
     }
 
-    $actionsSorted = Sort-RwJobActions -Actions $job.Actions
-
     # Build basic job
     $jobHt = @{}
-    $jobHt['jobs'] = foreach ($job in $jobs ) {
-        $ht = @{
-            $job.Name = [ordered]@{
-                tags     = @($job.Tags)
-                schedule = [ordered]@{
-                    type          = $job.Schedule.ScheduleType
-                    weekdays      = $job.Schedule.Weekdays
-                    time          = $job.Schedule.Time
-                    repeatMinutes = $job.Schedule.RepeatMinutes
-                }
-                runners  = @{
-                    tags = @( 'setme' )
-                }
-                actions  = foreach ($action in $actionsSorted) {
-                    [ordered]@{
-                        name       = $action.ActionName
-                        parameters = & {
-                            $ht = @{}
-                            foreach ($param in $action.Settings) {
-                                $ht[$param.Name] = $param.Value
-                            }
-                            $ht
+    $jobHt['jobs'] = @{}
+    foreach ($job in $jobs ) {
+        $jobHt['jobs'][$job.Name] = [ordered]@{
+            tags     = @($job.Tags)
+            schedule = [ordered]@{
+                type          = $job.Schedule.ScheduleType
+                weekdays      = $job.Schedule.Weekdays
+                time          = $job.Schedule.Time
+                repeatMinutes = $job.Schedule.RepeatMinutes
+            }
+            runners  = @{
+                tags = @( 'setme' )
+            }
+            actions  = foreach ($action in (Sort-RwJobActions -Actions $job.Actions)) {
+                [ordered]@{
+                    name       = $action.ActionName
+                    parameters = & {
+                        $ht = @{}
+                        foreach ($param in $action.Settings) {
+                            $ht[$param.Name] = $param.Value
                         }
-                        connector  = @{
-                            id = $action.ConnectionId
-                        }
+                        $ht
+                    }
+                    connector  = @{
+                        id = $action.ConnectionId
                     }
                 }
             }
@@ -97,17 +94,16 @@ Function Get-RwJobYaml {
                 $job = Get-RwJob -JobId $job.Id
             }
             { ($_ -like '*-Id') } {
-                $ht[$job.Name]['runners'] = @{
+                $jobHt['jobs'][$job.Name]['runners'] = @{
                     Ids = (Get-RwSetMember -SetId $job.EndpointSetId).Id
                 }
             }
             { ($_ -like '*-Name') } {
-                $ht[$job.Name]['runners'] = @{
+                $jobHt['jobs'][$job.Name]['runners'] = @{
                     Names = (Get-RwSetMember -SetId $job.EndpointSetId).Name
                 }
             }
         }
-        $ht
     }
 
     # Clean up null connectors and parameters
