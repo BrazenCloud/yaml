@@ -7,51 +7,101 @@ Function Get-RwJobYaml {
             Mandatory,
             ParameterSetName = 'ById'
         )]
+        [Parameter(
+            Mandatory,
+            ParameterSetName = 'ById-Id'
+        )]
+        [Parameter(
+            Mandatory,
+            ParameterSetName = 'ById-Name'
+        )]
         [string]$JobId,
         [Parameter(
             Mandatory,
             ParameterSetName = 'ByName'
         )]
-        [string]$JobName
+        [Parameter(
+            Mandatory,
+            ParameterSetName = 'ByName-Id'
+        )]
+        [Parameter(
+            Mandatory,
+            ParameterSetName = 'ByName-Name'
+        )]
+        [string]$JobName,
+        [Parameter(
+            Mandatory,
+            ParameterSetName = 'ByName-Id'
+        )]
+        [Parameter(
+            Mandatory,
+            ParameterSetName = 'ById-Id'
+        )]
+        [switch]$IncludeAssignedRunnersById,
+        [Parameter(
+            Mandatory,
+            ParameterSetName = 'ByName-Name'
+        )]
+        [Parameter(
+            Mandatory,
+            ParameterSetName = 'ById-Name'
+        )]
+        [switch]$IncludeAssignedRunnersByName
     )
-    if ($PSCmdlet.ParameterSetName -eq 'ByName') {
-        $job = Get-RwJobByName -JobName $JobName
-    } elseif ($PSCmdlet.ParameterSetName -eq 'ById') {
-        $job = Get-RwJob -JobId $JobId
+    $jobs = if ($PSCmdlet.ParameterSetName -like 'ByName*') {
+        foreach ($name in $jobName) {
+            Get-RwJobByName -JobName $name
+        }
+    } elseif ($PSCmdlet.ParameterSetName -like 'ById*') {
+        foreach ($id in $JobId) {
+            Get-RwJob -JobId $id
+        }
     }
 
     $actionsSorted = Sort-RwJobActions -Actions $job.Actions
 
     # Build basic job
     $jobHt = @{}
-    $jobHt['jobs'] = @{
-        $job.Name = [ordered]@{
-            tags     = @($job.Tags)
-            schedule = [ordered]@{
-                type          = $job.Schedule.ScheduleType
-                weekdays      = $job.Schedule.Weekdays
-                time          = $job.Schedule.Time
-                repeatMinutes = $job.Schedule.RepeatMinutes
-            }
-            runners  = @{
-                tags = @( 'setme' )
-            }
-            actions  = foreach ($action in $actionsSorted) {
-                [ordered]@{
-                    name       = $action.ActionName
-                    parameters = & {
-                        $ht = @{}
-                        foreach ($param in $action.Settings) {
-                            $ht[$param.Name] = $param.Value
+    $jobHt['jobs'] = foreach ($job in $jobs ) {
+        $ht = @{
+            $job.Name = [ordered]@{
+                tags     = @($job.Tags)
+                schedule = [ordered]@{
+                    type          = $job.Schedule.ScheduleType
+                    weekdays      = $job.Schedule.Weekdays
+                    time          = $job.Schedule.Time
+                    repeatMinutes = $job.Schedule.RepeatMinutes
+                }
+                runners  = @{
+                    tags = @( 'setme' )
+                }
+                actions  = foreach ($action in $actionsSorted) {
+                    [ordered]@{
+                        name       = $action.ActionName
+                        parameters = & {
+                            $ht = @{}
+                            foreach ($param in $action.Settings) {
+                                $ht[$param.Name] = $param.Value
+                            }
+                            $ht
                         }
-                        $ht
-                    }
-                    connector  = @{
-                        id = $action.ConnectionId
+                        connector  = @{
+                            id = $action.ConnectionId
+                        }
                     }
                 }
             }
         }
+        if ($IncludeAssignedRunnersById.IsPresent) {
+            $ht[$job.Name]['runners'] = @{
+                Ids = (Get-RwSetMember -SetId (Get-RwJob -JobId $job.Id).EndpointSetId).Id
+            }
+        } elseIf ($IncludeAssignedRunnersByName.IsPresent) {
+            $ht[$job.Name]['runners'] = @{
+                Names = (Get-RwSetMember -SetId (Get-RwJob -JobId $job.Id).EndpointSetId).Name
+            }
+        }
+        $ht
     }
 
     # Clean up null connectors and parameters
