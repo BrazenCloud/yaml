@@ -54,7 +54,7 @@
     RequiredModules   = @(
         @{
             ModuleName    = 'BrazenCloud'
-            ModuleVersion = '0.3.3'
+            ModuleVersion = '0.3.2'
             GUID          = '3f4232eb-3edc-45c5-ae3d-af1e09d83e3d'
         },
         @{
