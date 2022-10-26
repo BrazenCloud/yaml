@@ -1,4 +1,4 @@
-Function Get-RwJobYaml {
+Function Get-BcJobYaml {
     [cmdletbinding(
         DefaultParameterSetName = 'ById'
     )]
@@ -50,11 +50,11 @@ Function Get-RwJobYaml {
     )
     $jobs = if ($PSCmdlet.ParameterSetName -like 'ByName*') {
         foreach ($name in $jobName) {
-            Get-RwJobByName -JobName $name
+            Get-BcJobByName -JobName $name
         }
     } elseif ($PSCmdlet.ParameterSetName -like 'ById*') {
         foreach ($id in $JobId) {
-            Get-RwJob -JobId $id
+            Get-BcJob -JobId $id
         }
     }
 
@@ -73,7 +73,7 @@ Function Get-RwJobYaml {
             runners  = @{
                 tags = @( 'setme' )
             }
-            actions  = foreach ($action in (Sort-RwJobActions -Actions $job.Actions)) {
+            actions  = foreach ($action in (Sort-BcJobActions -Actions $job.Actions)) {
                 [ordered]@{
                     name       = $action.ActionName
                     parameters = & {
@@ -91,16 +91,16 @@ Function Get-RwJobYaml {
         }
         switch ($PSCmdlet.ParameterSetName) {
             { ($_ -like 'ByName*') } {
-                $job = Get-RwJob -JobId $job.Id
+                $job = Get-BcJob -JobId $job.Id
             }
             { ($_ -like '*-Id') } {
                 $jobHt['jobs'][$job.Name]['runners'] = @{
-                    Ids = (Get-RwSetMember -SetId $job.EndpointSetId).Id
+                    Ids = (Get-BcSetMember -SetId $job.EndpointSetId).Id
                 }
             }
             { ($_ -like '*-Name') } {
                 $jobHt['jobs'][$job.Name]['runners'] = @{
-                    Names = (Get-RwSetMember -SetId $job.EndpointSetId).Name
+                    Names = (Get-BcSetMember -SetId $job.EndpointSetId).Name
                 }
             }
         }
@@ -114,7 +114,7 @@ Function Get-RwJobYaml {
                 $action.Remove('connector')
             } else {
                 if ($connectorCache.Keys -notcontains $action['connector']['id']) {
-                    $connectorCache[$action['connector']['id']] = Get-RwConnection -ConnectionId $action['connector']['id']
+                    $connectorCache[$action['connector']['id']] = Get-BcConnection -ConnectionId $action['connector']['id']
                 }
                 $action['connector']['name'] = $connectorCache[$action['connector']['id']].Name
                 $action['connector'].Remove('id')
@@ -135,7 +135,7 @@ Function Get-RwJobYaml {
 
     if ($connectorCache.Keys.Count -gt 0) {
         $jobHt['connectors'] = foreach ($connector in $connectorCache.Keys) {
-            $conn = Get-RwConnection -ConnectionId $connector
+            $conn = Get-BcConnection -ConnectionId $connector
             [ordered]@{
                 $conn.Name = [ordered]@{
                     action     = @{

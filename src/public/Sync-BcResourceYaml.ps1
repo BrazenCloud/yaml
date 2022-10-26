@@ -1,4 +1,4 @@
-Function Sync-RwResourceYaml {
+Function Sync-BcResourceYaml {
     [cmdletbinding(
         DefaultParameterSetName = 'FromString'
     )]
@@ -14,11 +14,14 @@ Function Sync-RwResourceYaml {
         [switch]$Test
     )
 
+    $ogip = $InformationPreference
+    $InformationPreference = 'Continue'
+
     if ($PSCmdlet.ParameterSetName -eq 'FromFile') {
         $Yaml = Get-Content -Raw $PathToYaml
     }
 
-    $currentUser = Get-RwAuthenticationCurrentUser
+    $currentUser = Get-BcAuthenticationCurrentUser
 
     Write-Verbose "Context:`n- Name: $($currentUser.name)`n- Email: $($currentUser.emailAddress)`n- Home Group: $($currentUser.homeContainerId)"
 
@@ -37,7 +40,7 @@ Function Sync-RwResourceYaml {
                 if ($resources.connectors[$connector]['action'] -contains 'id') {
                     $actionId = $resources.connectors[$connector]['action']['id']
                 } else {
-                    $actionId = (Get-RwResourceFromCache -ResourceType Action -Name $resources.connectors[$connector]['action']['name']).Id
+                    $actionId = (Get-BcResourceFromCache -ResourceType Action -Name $resources.connectors[$connector]['action']['name']).Id
                 }
             }
 
@@ -46,7 +49,7 @@ Function Sync-RwResourceYaml {
                 if ($resources.connectors[$connector]['runner'] -contains 'id') {
                     $runnerId = $resources.connectors[$connector]['runner']['id']
                 } else {
-                    $runnerId = (Get-RwResourceFromCache -ResourceType Runner -Name $resources.connectors[$connector]['runner']['name']).Id
+                    $runnerId = (Get-BcResourceFromCache -ResourceType Runner -Name $resources.connectors[$connector]['runner']['name']).Id
                 }
             }
 
@@ -62,20 +65,20 @@ Function Sync-RwResourceYaml {
                 $splat['settings'] = $resources.connectors[$connector]['parameters']
             }
 
-            $conn = Get-RwConnectionByName $connector
+            $conn = Get-BcConnectionByName $connector
             if ($null -ne $conn) {
                 Write-Information '  - Updating existing Connector'
                 if ($Test.IsPresent) {
                     Write-Information "  - Would update existing Connector"
                 } else {
-                    Set-RwConnection @splat -ConnectionId $conn.Id -ErrorAction Stop
+                    Set-BcConnection @splat -ConnectionId $conn.Id -ErrorAction Stop
                 }
             } else {
                 Write-Information '  - Creating new connector'
                 if ($Test.IsPresent) {
                     Write-Information "  - Would create new Connector"
                 } else {
-                    New-RwConnection @splat
+                    New-BcConnection @splat
                 }
             }
 
@@ -85,15 +88,15 @@ Function Sync-RwResourceYaml {
                     Write-Information "  - Would add tags: $($resources.connectors[$connector]['tags'] -join ',')"
                 } else {
                     # Build a set
-                    $set = New-RwSet
+                    $set = New-BcSet
                     # Add the job to the set
                     if ($null -eq $conn) {
-                        $conn = Get-RwConnectionByName -ConnectionName $connector
+                        $conn = Get-BcConnectionByName -ConnectionName $connector
                     }
-                    Add-RwSetToSet -TargetSetId $set -ObjectIds $conn.Id
+                    Add-BcSetToSet -TargetSetId $set -ObjectIds $conn.Id
                     # Add the tags to the set
                     Write-Information "  - Adding tags: $($resources.connectors[$connector]['tags'] -join ',')"
-                    Add-RwTag -SetId $set -Tags $resources.connectors[$connector]['tags']
+                    Add-BcTag -SetId $set -Tags $resources.connectors[$connector]['tags']
                 }
             }
         }
@@ -110,18 +113,18 @@ Function Sync-RwResourceYaml {
             Write-Information "- $job"
 
             # Create job if it doesn't already exist
-            $existingJob = Get-RwJobByName $job
+            $existingJob = Get-BcJobByName $job
 
             if ($null -ne $existingJob) {
                 Write-Verbose '  - Updating existing'
-                $existingJob = Get-RwJob -JobId $existingJob.Id
+                $existingJob = Get-BcJob -JobId $existingJob.Id
             } else {
                 Write-Verbose '  - Creating a new one'
                 if ($Test.IsPresent) {
                     Write-Information "  - Would create job"
                 } else {
-                    $newJob = New-RwJob -Name $job -IsEnabled -IsHidden:$false
-                    $existingJob = Get-RwJob -JobId $newJob.JobId
+                    $newJob = New-BcJob -Name $job -IsEnabled -IsHidden:$false
+                    $existingJob = Get-BcJob -JobId $newJob.JobId
                 }
             }
 
@@ -131,13 +134,13 @@ Function Sync-RwResourceYaml {
 
                 # Create the schedule object
                 $sched = $resources.jobs[$job]['schedule']
-                $schedule = New-RwJobSchedule @sched
+                $schedule = New-BcJobSchedule @sched
 
                 # Set the schedule
                 if ($Test.IsPresent) {
                     Write-Information "  - Would set schedule to $($scheduleSplat | ConvertTo-Json -Compress)"
                 } else {
-                    Set-RwJobSchedule -JobId $existingJob.Id -Schedule $schedule
+                    Set-BcJobSchedule -JobId $existingJob.Id -Schedule $schedule
                 }
             }
 
@@ -151,7 +154,7 @@ Function Sync-RwResourceYaml {
                     if ($action.Keys -contains 'id') {
                         $actionHt['RepositoryActionId'] = $action['id']
                     } else {
-                        $actionHt['RepositoryActionId'] = (Get-RwResourceFromCache -ResourceType Action -Name $action['name']).Id
+                        $actionHt['RepositoryActionId'] = (Get-BcResourceFromCache -ResourceType Action -Name $action['name']).Id
                     }
                     Write-Information "    - $x`: '$($action['name'])'"
                     Write-Verbose "Associating '$($action['name'])' to '$($actionHt['RepositoryActionId'])'"
@@ -165,7 +168,7 @@ Function Sync-RwResourceYaml {
                         if ($action['connector'].Keys -contains 'id') {
                             $actionHt['ConnectionId'] = $action['connector']['id']
                         } elseif ($action['connector'].Keys -contains 'name') {
-                            $actionHt['ConnectionId'] = (Get-RwConnectionByName -ConnectionName $action['connector']['name']).Id
+                            $actionHt['ConnectionId'] = (Get-BcConnectionByName -ConnectionName $action['connector']['name']).Id
                         }
                     }
 
@@ -174,7 +177,7 @@ Function Sync-RwResourceYaml {
                 if ($Test.IsPresent) {
                     Write-Information "    - Would Update Actions"
                 } else {
-                    Set-RwJobAction -JobId $existingJob.Id -Request $actions
+                    Set-BcJobAction -JobId $existingJob.Id -Request $actions
                 }
             }
 
@@ -183,10 +186,10 @@ Function Sync-RwResourceYaml {
                 Write-Information '  - Adding Runners'
                 $newMembers = if ($resources.jobs[$job]['runners'].Keys -contains 'names') {
                     Write-Information "    - Adding runners by name"
-                    (Get-RwRunnerByName -AssetName $resources.jobs[$job]['runners']['names']).AssetId
+                    (Get-BcRunnerByName -AssetName $resources.jobs[$job]['runners']['names']).AssetId
                 } elseif ($resources.jobs[$job]['runners'].Keys -contains 'tags') {
                     Write-Information "    - Adding Runners by tags: '$($resources.jobs[$job]['runners']['tags'] -join "','")'."
-                    (Get-RwEndpointByTag -Tags $resources.jobs[$job]['runners']['tags']).Id
+                    (Get-BcEndpointByTag -Tags $resources.jobs[$job]['runners']['tags']).Id
                 }
 
                 Write-Information "    - Found $($newMembers.Count) total Runners that should be assigned"
@@ -194,7 +197,7 @@ Function Sync-RwResourceYaml {
                 if ($Test.IsPresent) {
                     Write-Information "    - Would update membership"
                 } else {
-                    Sync-RwSetMembership -Members $newMembers -SetId $existingJob.EndpointSetId
+                    Sync-BcSetMembership -Members $newMembers -SetId $existingJob.EndpointSetId
                 }
             }
 
@@ -204,16 +207,17 @@ Function Sync-RwResourceYaml {
                     Write-Information "  - Would add tags: $($resources.jobs[$job]['tags'] -join ',')"
                 } else {
                     # Build a set
-                    $set = New-RwSet
+                    $set = New-BcSet
                     # Add the job to the set
-                    Add-RwSetToSet -TargetSetId $set -ObjectIds $existingJob.Id
+                    Add-BcSetToSet -TargetSetId $set -ObjectIds $existingJob.Id
                     # Add the tags to the set
                     Write-Information "  - Adding tags: $($resources.jobs[$job]['tags'] -join ',')"
-                    Add-RwTag -SetId $set -Tags $resources.jobs[$job]['tags']
+                    Add-BcTag -SetId $set -Tags $resources.jobs[$job]['tags']
                 }
             }
         }
     } else {
         Write-Information "No jobs found."
     }
+    $InformationPreference = $ogip
 }

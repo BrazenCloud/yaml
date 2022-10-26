@@ -1,10 +1,10 @@
-Function Sync-RwSetMembership {
+Function Sync-BcSetMembership {
     [CmdletBinding()]
     param (
         [string[]]$Members,
         [string]$SetId
     )
-    $existingMembers = Get-RwSetMember -SetId $SetId
+    $existingMembers = Get-BcSetMember -SetId $SetId
 
     Write-Verbose "Current set membership count: $($existingMembers.Count)"
 
@@ -29,12 +29,12 @@ Function Sync-RwSetMembership {
     # Remove unneeded runners
     if ($toRemove.Count -gt 0) {
         Write-Verbose "Removing $($toRemove.Count) Runners from the set"
-        Remove-RwSetFromSet -TargetSetId $SetId -ObjectIds $toRemove | Out-Null
+        Remove-BcSetFromSet -TargetSetId $SetId -ObjectIds $toRemove | Out-Null
     }
 
     # Add those runners to the job set
     if ($toAdd.Count -gt 0) {
         Write-Verbose "Adding $($toRemove.Count) Runners to the set"
-        Add-RwSetToSet -TargetSetId $SetId -ObjectIds $toAdd | Out-Null
+        Add-BcSetToSet -TargetSetId $SetId -ObjectIds $toAdd | Out-Null
     }
 }

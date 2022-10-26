@@ -1,7 +1,7 @@
-# runway-powershell-yaml
-[![Runway.YAML](https://img.shields.io/powershellgallery/v/Runway.YAML.svg?style=flat-square&label=Runway.YAML "Runway.YAML")](https://www.powershellgallery.com/packages/Runway.YAML/)
+# BrazenCloud.YAML
+[![BrazenCloud.YAML](https://img.shields.io/powershellgallery/v/BrazenCloud.YAML.svg?style=flat-square&label=BrazenCloud.YAML "BrazenCloud.YAML")](https://www.powershellgallery.com/packages/BrazenCloud.YAML/)
 
-This module is designed to extend the [Runway PowerShell SDK](https://github.com/runway-software/runway-powershell) to enable importing and exporting job definitions in YAML format.
+This module is designed to extend the [BrazenCloud PowerShell SDK](https://github.com/BrazenCloud/powershell) to enable importing and exporting job definitions in YAML format.
 
 ## Example
 
@@ -10,42 +10,42 @@ Be sure to check out our [Yaml Demo](https://github.com/runway-software/yaml-dem
 ## Installation
 
 ```powershell
-Install-Module Runway.Yaml -Repository PSGallery
+Install-Module BrazenCloud.Yaml -Repository PSGallery
 ```
 
-This module requires the [Runway module v0.2.0+](https://github.com/runway-software/runway-powershell).
+This module requires the [BrazenCloud module v0.2.0+](https://github.com/BrazenCloud/powershell).
 
 ## Usage
 
-For all usage, you will need to Authenticate to Runway (see the [Runway PowerShell repository](https://github.com/runway-software/runway-powershell)).
+For all usage, you will need to Authenticate to BrazenCloud (see the [BrazenCloud PowerShell repository](https://github.com/BrazenCloud/powershell)).
 
 ### Export YAML
 
-To export a job definition from Runway, you'll need to find the job name or ID and run:
+To export a job definition from BrazenCloud, you'll need to find the job name or ID and run:
 
 ```powershell
-Get-RwJobYaml -JobName 'Demo Job'
+Get-BcJobYaml -JobName 'Demo Job'
 ```
 
 This will return a string in yaml format. To write that to a file you can:
 
 ```powershell
-Get-RwJobYaml -JobName 'Demo Job' | Out-File .\DemoJob.yaml
+Get-BcJobYaml -JobName 'Demo Job' | Out-File .\DemoJob.yaml
 ```
 
 ### Import YAML
 
-To import a job definition into Runway, you'll need to locate the file on your disk or have the yaml loaded already
+To import a job definition into BrazenCloud, you'll need to locate the file on your disk or have the yaml loaded already
 
 ```powershell
-Sync-RwResourceYaml -PathToYaml .\DemoJob.yaml
+Sync-BcResourceYaml -PathToYaml .\DemoJob.yaml
 ```
 
-To see an example of how to use this module to import yaml job definitions into Runway, check out our [YAML demo repo](https://github.com/runway-software/yaml-demo)
+To see an example of how to use this module to import yaml job definitions into BrazenCloud, check out our [YAML demo repo](https://github.com/runway-software/yaml-demo)
 
 ## YAML definition
 
-In current form, Runway.YAML supports 2 base objects: `jobs` and `connectors`.
+In current form, BrazenCloud.YAML supports 2 base objects: `jobs` and `connectors`.
 
 ### Connectors
 
@@ -62,7 +62,7 @@ A `connectors` block is an object with each property representing a Connector. E
 
 `runner` takes one of two properties: `name`, which will be the name of the Runner, or `id`, which will be the Id of the Runner. If both are specified, `id` takes priority.
 
-If the `name` property is specified, the sync will find the first Runner or Action that matches the name. Due to the way that Runway is designed, Actions will have unique names. However, for Runners, there is no such requirement. The way to guarantee uniqueness is to specify an `id` for runners. The chances of name overlap is dependent on your environment.
+If the `name` property is specified, the sync will find the first Runner or Action that matches the name. Due to the way that BrazenCloud is designed, Actions will have unique names. However, for Runners, there is no such requirement. The way to guarantee uniqueness is to specify an `id` for runners. The chances of name overlap is dependent on your environment.
 
 `parameters` is an object and each key value pair is a parameter name and value that should be passed to the connector.
 
@@ -150,6 +150,10 @@ jobs:
 ```
 
 ## ChangeLog
+
+### 0.2
+
+  - Renamed to `BrazenCloud.YAML` and now requires the BrazenCloud module.
 
 ### 0.1.1
 

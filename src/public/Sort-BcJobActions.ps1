@@ -1,7 +1,7 @@
-Function Sort-RwJobActions {
+Function Sort-BcJobActions {
     [cmdletbinding()]
     param (
-        [RunwaySdk.PowerShell.Models.ActionInstance[]]$Actions
+        [BrazenCloudSdk.PowerShell.Models.ActionInstance[]]$Actions
     )
     $ht = @{}
     foreach ($action in $Actions) {
