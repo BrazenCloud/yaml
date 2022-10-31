@@ -5,7 +5,7 @@ This module is designed to extend the [BrazenCloud PowerShell SDK](https://githu
 
 ## Example
 
-Be sure to check out our [Yaml Demo](https://github.com/runway-software/yaml-demo) example repository with several yaml examples and a [Github Actions CI/CD workflow](https://github.com/Runway-Software/yaml-demo/blob/main/.github/workflows/cicd.yaml) that leverages this module.
+Be sure to check out our [Yaml Demo](https://github.com/brazencloud/yaml-demo) example repository with several yaml examples and a [Github Actions CI/CD workflow](https://github.com/brazencloud/yaml-demo/blob/main/.github/workflows/cicd.yaml) that leverages this module.
 
 ## Installation
 
@@ -41,7 +41,7 @@ To import a job definition into BrazenCloud, you'll need to locate the file on y
 Sync-BcResourceYaml -PathToYaml .\DemoJob.yaml
 ```
 
-To see an example of how to use this module to import yaml job definitions into BrazenCloud, check out our [YAML demo repo](https://github.com/runway-software/yaml-demo)
+To see an example of how to use this module to import yaml job definitions into BrazenCloud, check out our [YAML demo repo](https://github.com/brazencloud/yaml-demo)
 
 ## YAML definition
 
